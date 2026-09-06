@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Tokens base - propósito semántico */
+    --color-primary: 0 0% 13%;
+    --color-primary-contrast: 0 0% 98%;
+    
+    --color-secondary: 0 0% 20%;
+    --color-secondary-contrast: 0 0% 95%;
+    
+    --color-surface: 0 0% 100%;
+    --color-surface-contrast: 0 0% 10%;
+    
+    --color-muted: 0 0% 96.1%;
+    --color-muted-contrast: 0 0% 45.1%;
+    
+    --color-accent: 0 0% 90%;
+    --color-accent-contrast: 0 0% 9%;
+    
+    --color-destructive: 0 72.2% 50.6%;
+    --color-destructive-contrast: 0 0% 98%;
+    
+    --color-edit: 45 100% 50%;
+    --color-edit-contrast: 0 0% 10%;
+
+    --color-success: 142.1 76.2% 36.3%;
+    --color-success-contrast: 0 0% 98%;
+    
+    --color-border: 0 0% 89.8%;
+    
+    /* Aplicación de tokens */
+    --background: var(--color-surface);
+    --foreground: var(--color-surface-contrast);
+    
+    --card: var(--color-surface);
+    --card-foreground: var(--color-surface-contrast);
+    
+    --popover: var(--color-surface);
+    --popover-foreground: var(--color-surface-contrast);
+    
+    --primary: var(--color-primary);
+    --primary-foreground: var(--color-primary-contrast);
+    
+    --secondary: var(--color-secondary);
+    --secondary-foreground: var(--color-secondary-contrast);
+    
+    --muted: var(--color-muted);
+    --muted-foreground: var(--color-muted-contrast);
+    
+    --accent: var(--color-accent);
+    --accent-foreground: var(--color-accent-contrast);
+    
+    --destructive: var(--color-destructive);
+    --destructive-foreground: var(--color-destructive-contrast);
+    
+    --edit: var(--color-edit);
+    --edit-foreground: var(--color-edit-contrast);
+
+    --success: var(--color-success);
+    --success-foreground: var(--color-success-contrast);
+    
+    --border: var(--color-border);
+    --input: var(--color-border);
+    --ring: var(--color-primary);
+    
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --color-primary: 0 0% 90%;
+    --color-primary-contrast: 0 0% 10%;
+    
+    --color-secondary: 0 0% 25%;
+    --color-secondary-contrast: 0 0% 90%;
+    
+    --color-surface: 0 0% 8%;
+    --color-surface-contrast: 0 0% 95%;
+    
+    --color-muted: 0 0% 15%;
+    --color-muted-contrast: 0 0% 60%;
+    
+    --color-accent: 0 0% 20%;
+    --color-accent-contrast: 0 0% 95%;
+    
+    --color-destructive: 0 62.8% 40.6%;
+    /* destructive-contrast y edit no cambian */
+    
+    --color-border: 0 0% 20%;
+    /* ring usa primary que ya cambió */
+  }
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+}
+
+.font-heading {
+  font-family: 'Georgia', 'Times New Roman', serif; 
+}
+
+.glassmorphism {
+  background: hsla(var(--color-surface), 0.1); /* Adjusted for darker theme potential */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid hsla(var(--color-surface), 0.15); /* Adjusted for darker theme potential */
+}
+
+.dark .glassmorphism {
+   background: hsla(var(--color-surface), 0.2); /* Darker glassmorphism */
+   border: 1px solid hsla(var(--color-border), 0.3);
+}
+
+/* --- REGLA AÑADIDA PARA ARREGLO EN MÓVIL --- */
+@layer utilities {
+  [data-no-scroll-trigger] {
+    touch-action: pan-y !important;
+  }
+}
+
+/* En tu CSS global */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px hsla(var(--color-edit), 0.4); }
+  50% { box-shadow: 0 0 20px hsla(var(--color-edit), 0.6); }
+}
+
+.border-edit:focus {
+  animation: pulse-glow 2s infinite;
+}
+
+@media (max-width: 640px) {
+  .no-scale-mobile:hover {
+    transform: none !important;
+  }
+}

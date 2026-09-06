@@ -1,0 +1,1 @@
+Respondeme siempre en español. Explícame qué hiciste y por qué. Para cualquier los estilos e identidad, consulta siempre el README (Mantelo actualizado si ves que le falta algo). Si hay algo que no puedas editar, dime que hay que cambiar y yo lo hago.

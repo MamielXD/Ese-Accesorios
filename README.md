@@ -2,18 +2,18 @@
 
 Una plataforma de comercio electrónico moderna y elegante para la venta de accesorios, con integración de pagos y gestión de órdenes.
 
-## 🚀 Demo
+## Demo
 
-[Ese Accesorios - Web](https://eseaccesorios.com/) *(Asumiendo URL por el redirect de Wompi)*
+[Ese Accesorios - Web](https://eseaccesorios.com/)
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 - **Frontend:** React, Vite, Tailwind CSS
 - **Componentes:** Radix UI, Framer Motion
 - **Backend/DB:** Supabase
 - **Pagos:** Wompi
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 - Catálogo de productos interactivo y responsive.
 - Autenticación de usuarios y perfiles.
@@ -22,7 +22,7 @@ Una plataforma de comercio electrónico moderna y elegante para la venta de acce
 - Historial de órdenes para el usuario.
 - Panel de administración para gestión de inventario y pedidos.
 
-## ⚙️ Instalación
+## Instalación
 
 ```bash
 git clone https://github.com/MamielXD/Ese-Accesorios.git
@@ -33,6 +33,6 @@ npm run dev
 
 > **Nota:** Se requiere configurar un archivo `.env` con las variables de Supabase y Wompi para el correcto funcionamiento local.
 
-## 📌 Estado
+## Estado
 
 Proyecto finalizado / En producción

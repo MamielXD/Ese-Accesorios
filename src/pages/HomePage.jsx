@@ -256,8 +256,8 @@ const HomePage = () => {
                           width="300"
                           height="300"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter saturate-90"/>
-                        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-500 flex items-center justify-center p-4">
-                          <span className="text-background text-base sm:text-lg font-light text-center bg-foreground/40 rounded-sm px-4 py-2 backdrop-blur-sm tracking-wide">
+                        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/20 transition-colors duration-500 flex items-center justify-center p-4">
+                          <span className="text-background text-base sm:text-lg font-light text-center bg-foreground/30 rounded-sm px-4 py-2 backdrop-blur-sm tracking-wide">
                             {category.name}
                           </span>
                         </div>

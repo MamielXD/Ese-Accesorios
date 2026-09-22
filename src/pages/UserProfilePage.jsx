@@ -587,7 +587,7 @@ const UserProfilePage = () => {
               <CardDescription className="text-xs sm:text-sm text-foreground/90">Acumula puntos con tus compras y canjéalos por recompensas.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6">
-              <div className="text-center p-4 sm:p-6 bg-primary/50 rounded-sm">
+              <div className="text-center p-4 sm:p-6 bg-primary/5 rounded-sm">
                 <p className="text-md sm:text-lg text-foreground">Puntos Disponibles:</p>
                 <p className="text-5xl sm:text-6xl font-light text-foreground/90">{points}</p>
               </div>
@@ -601,7 +601,7 @@ const UserProfilePage = () => {
               </div>
               <div>
                 <h3 className="text-md sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Redimir Cupones:</h3>
-                <div className="p-4 bg-primary/80 border border-accent rounded-sm">
+                <div className="p-4 bg-primary/10 border border-accent rounded-sm">
                   <p className="text-sm text-foreground flex items-center mb-3">
                     <Ticket className="mr-2 h-4 w-4" />
                     Usa tus puntos para redimir cupones exclusivos con descuentos especiales.

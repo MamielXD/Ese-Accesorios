@@ -1,21 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
 import ImageSelector from '@/components/ImageSelector';
-import CategorySelector from '@/components/CategorySelector';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { getImageUrl } from '@/utils/imageHelpers';
+import { Edit2, Trash2, HelpCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+
+// Componente de Tooltip / Ayuda simple
+function FieldHelp({ text }) {
+  return (
+    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+      <HelpCircle size={12} /> {text}
+    </p>
+  );
+}
 
 export default function CategoryForm({ mode = 'crear', searchTerm = '' }) {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState({
+    id: null,
     name: '',
     slug: '',
     image_url: '',
     description: '',
   });
 
-  const [selectedId, setSelectedId] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [refreshCount, setRefreshCount] = useState(0);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (mode === 'editar' || mode === 'borrar') {
+      fetchCategories();
+    }
+  }, [mode]);
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name', { ascending: true });
+    if (!error) setCategories(data);
+  };
 
   const capitalizeWords = (str) =>
     str
@@ -44,127 +72,216 @@ export default function CategoryForm({ mode = 'crear', searchTerm = '' }) {
     setCategory(updated);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const clearForm = () => {
+    setCategory({
+      id: null,
+      name: '',
+      slug: '',
+      image_url: '',
+      description: '',
+    });
+  };
 
-    if (mode === 'crear') {
-      const { error } = await supabase.from('categories').insert([category]);
-      if (error) toast.error('Error al crear categoría');
-      else {
-        toast.success('Categoría creada');
-        setCategory({ name: '', slug: '', image_url: '', description: '' });
-        setRefreshCount((prev) => prev + 1);
-      }
+  const openEditModal = (cat) => {
+    setCategory({
+      id: cat.id,
+      name: cat.name || '',
+      slug: cat.slug || '',
+      image_url: cat.image_url || '',
+      description: cat.description || '',
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (cat) => {
+    if (!window.confirm(`¿Estás seguro de eliminar la categoría "${cat.name}"? Esta acción no se puede deshacer y podría afectar a los productos asociados.`)) {
+      return;
     }
-
-    if (mode === 'editar') {
-      if (!selectedId || !selectedCategory) {
-        toast.error('Selecciona una categoría para editar');
-        return;
-      }
-
-      const fieldsToUpdate = {};
-      for (const key in category) {
-        if (category[key] !== '' && category[key] !== selectedCategory[key]?.toString()) {
-          fieldsToUpdate[key] = category[key];
-        }
-      }
-
-      if (Object.keys(fieldsToUpdate).length === 0) {
-        toast('No hiciste ningún cambio');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('categories')
-        .update(fieldsToUpdate)
-        .eq('id', selectedId);
-
-      if (error) toast.error('Error al actualizar categoría');
-      else {
-        toast.success('Categoría actualizada');
-        setRefreshCount((prev) => prev + 1);
-      }
-    }
-
-    if (mode === 'borrar') {
-      if (!selectedId) {
-        toast.error('Selecciona una categoría para borrar');
-        return;
-      }
-
-      const { error } = await supabase.from('categories').delete().eq('id', selectedId);
-      if (error) toast.error('Error al borrar categoría');
-      else {
-        toast.success('Categoría eliminada');
-        setCategory({ name: '', slug: '', image_url: '', description: '' });
-        setSelectedId(null);
-        setSelectedCategory(null);
-        setRefreshCount((prev) => prev + 1);
-      }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('categories').delete().eq('id', cat.id);
+      if (error) throw error;
+      toast.success('Categoría eliminada exitosamente');
+      fetchCategories();
+    } catch (err) {
+      toast.error('Error al eliminar categoría');
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 p-6 max-w-xl mx-auto bg-background/80 rounded-sm shadow-lg border transition-all duration-500"
-    >
-      {mode !== 'crear' && (
-        <CategorySelector
-          key={refreshCount}
-          selectedId={selectedId}
-          searchTerm={searchTerm}
-          onSelect={(cat) => {
-            setSelectedId(cat.id);
-            setSelectedCategory(cat);
-            setCategory({
-              name: cat.name || '',
-              slug: cat.slug || '',
-              image_url: cat.image_url || '',
-              description: cat.description || '',
-            });
-          }}
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      if (!category.name || !category.image_url) {
+        toast.error('El nombre y la imagen son obligatorios');
+        setLoading(false);
+        return;
+      }
+
+      if (category.id) { // Es edición
+        const { id, ...fieldsToUpdate } = category;
+        const { error } = await supabase
+          .from('categories')
+          .update(fieldsToUpdate)
+          .eq('id', id);
+          
+        if (error) throw error;
+        toast.success('Categoría actualizada correctamente');
+        setIsEditModalOpen(false);
+        clearForm();
+        fetchCategories();
+      } else { // Es creación
+        const { id, ...fieldsToInsert } = category;
+        const { error } = await supabase.from('categories').insert([fieldsToInsert]);
+        if (error) throw error;
+        toast.success('Categoría creada exitosamente');
+        clearForm();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.message || 'Error al procesar la categoría.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCategories = categories.filter((c) => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const renderFormFields = () => (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="name">Nombre de la categoría</Label>
+        <Input 
+          id="name" name="name" 
+          value={category.name} onChange={handleChange} 
+          placeholder="Ej: Anillos" 
         />
+        <FieldHelp text="El nombre debe ser claro. (El 'slug' se generará automáticamente)" />
+      </div>
+
+      <div>
+        <Label htmlFor="description">Descripción</Label>
+        <Input 
+          id="description" name="description" 
+          value={category.description} onChange={handleChange} 
+          placeholder="Ej: Colección exclusiva de anillos..." 
+        />
+        <FieldHelp text="Una breve descripción opcional para esta colección." />
+      </div>
+
+      <div>
+        <Label>Imagen de la Categoría</Label>
+        <div className="mt-2 border rounded p-4 bg-muted/20">
+          <ImageSelector 
+            selectedUrl={category.image_url} 
+            onSelect={(url) => setCategory({ ...category, image_url: url })} 
+          />
+        </div>
+        <FieldHelp text="Imagen representativa que aparecerá en el menú o inicio." />
+      </div>
+    </div>
+  );
+
+  if (mode === 'crear') {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto bg-background p-6 rounded-lg shadow-sm border transition-all duration-300">
+        <div className="mb-6 border-b pb-4">
+          <h3 className="text-xl font-medium">Crear Nueva Categoría</h3>
+          <p className="text-sm text-muted-foreground mt-1">Organiza tus productos en colecciones claras.</p>
+        </div>
+        
+        {renderFormFields()}
+
+        <Button type="submit" className="w-full mt-6" disabled={loading}>
+          {loading ? 'Guardando...' : 'Crear Categoría'}
+        </Button>
+      </form>
+    );
+  }
+
+  // Vista de Tabla/Grid para Editar / Borrar
+  return (
+    <div className="space-y-4">
+      {filteredCategories.length === 0 ? (
+        <div className="text-center py-12 bg-background border rounded-lg">
+          <p className="text-muted-foreground">No se encontraron categorías.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredCategories.map(cat => (
+            <div key={cat.id} className="bg-background border rounded-lg overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow">
+              <div className="h-32 bg-muted relative">
+                <img 
+                  src={getImageUrl(cat.image_url, 'small')} 
+                  alt={cat.name} 
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex flex-col flex-1">
+                <h4 className="font-medium text-lg">{cat.name}</h4>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  {cat.description || 'Sin descripción'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 font-mono bg-muted px-2 py-1 rounded w-fit">
+                  /{cat.slug}
+                </p>
+                
+                <div className="mt-4 pt-4 border-t flex gap-2">
+                  {mode === 'editar' ? (
+                    <Button 
+                      variant="outline" 
+                      className="w-full gap-2 border-edit text-edit hover:bg-edit hover:text-edit-foreground"
+                      onClick={() => openEditModal(cat)}
+                    >
+                      <Edit2 size={16} /> Editar
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="destructive" 
+                      className="w-full gap-2"
+                      onClick={() => handleDelete(cat)}
+                      disabled={loading}
+                    >
+                      <Trash2 size={16} /> Eliminar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
-      {mode !== 'borrar' && (
-        <>
-          <input
-            name="name"
-            value={category.name}
-            onChange={handleChange}
-            placeholder="Nombre de la categoría"
-            className="border rounded-sm w-full px-3 py-2 bg-input text-foreground focus:border-ring focus:ring-0 transition-all"
-          />
-
-          <ImageSelector
-            selectedUrl={category.image_url}
-            onSelect={(url) => setCategory({ ...category, image_url: url })}
-          />
-
-          <input
-            name="description"
-            value={category.description}
-            onChange={handleChange}
-            placeholder="Descripción"
-            className="border rounded-sm w-full px-3 py-2 bg-input text-foreground focus:border-ring focus:ring-0 transition-all"
-          />
-        </>
-      )}
-
-      <Button
-        type="submit"
-        className={`w-full px-6 py-3 tracking-wide uppercase rounded-sm text-sm font-medium shadow-sm transition-all duration-300 ${
-          mode === 'crear'
-            ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
-            : mode === 'editar'
-            ? 'bg-edit hover:bg-edit/90 text-edit-foreground'
-            : 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
-        }`}
-      >
-        {mode === 'crear' ? 'Crear Categoría' : mode === 'editar' ? 'Actualizar' : 'Eliminar'}
-      </Button>
-    </form>
+      {/* Modal de Edición */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Categoría</DialogTitle>
+            <DialogDescription>
+              Modifica la información de "{category.name}". Haz clic en actualizar cuando termines.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+            {renderFormFields()}
+            
+            <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+              <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={loading} className="bg-edit hover:bg-edit/90 text-edit-foreground">
+                {loading ? 'Actualizando...' : 'Actualizar Categoría'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
